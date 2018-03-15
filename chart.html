@@ -1,0 +1,324 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Sensor Alert</title>
+	 <link href="public/css/app.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+ 
+<!-- jQuery library -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+<!-- Latest compiled JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <script  type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.4.8/p5.min.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.4.8/addons/p5.dom.js"></script>
+  <script type="text/javascript">
+  var text;   // variable for the text div you'll create
+  var text2; 
+  var matches = [];
+  var number_regex = /[+-]?\d+(\.\d+)?/g;
+  var socket = new WebSocket("ws://localhost:8081");
+  
+  function setup() {
+    // The socket connection needs two event listeners:
+    socket.onopen = openSocket;
+    socket.onmessage = showData;
+    // make a new div and position it at 10, 10:
+    text = createDiv("Sensor reading:");
+    text2 = createDiv("Sensor reading:");
+    text.position(10,100);
+    text2.position(10,10);
+  }
+  function openSocket() {
+    text.html("Socket open");
+    socket.send("Hello server");
+  }
+  /*
+  showData(), below, will get called whenever there is new Data
+  from the server. So there's no need for a draw() function:
+  */
+  function showData(result) {
+    // when the server returns, show the result in the div:
+    text.html(result.data);
+    xPos = int(result.data);        // convert result to an integer
+    matches = [];
+   result.data.replace(number_regex, function(match) {
+    matches.push(match);
+});
+    text2.html(matches[1]);
+    //text.position(xPos, 10);        // position the text
+  }
+window.onload = function () {
+var oflag=0;
+var tflag=0;
+var dps = [];
+var dps2 = [];
+var dps3 = []; // dataPoints
+var chart = new CanvasJS.Chart("chartContainer", {
+	title :{
+		text: "MPU6050 Sismic Alarm"
+	},
+	axisY: {
+		includeZero: true
+	},      
+	data: [{
+		type: "line",
+		dataPoints: dps
+	},{
+		type: "line",
+		dataPoints: dps2
+	},{
+		type: "line",
+		dataPoints: dps3
+	}]
+});
+
+var xVal = 0;
+var yVal = 100; 
+var yVal2 = 100; 
+var yVal3 = 100; 
+var updateInterval = 250;
+var dataLength = 100; // number of dataPoints visible at any point
+
+var updateChart = function (count) {
+
+	count = count || 1;
+
+	for (var j = 0; j < count; j++) {
+		yVal =parseInt(matches[1]);
+		dps.push({
+			x: xVal,
+			y: yVal
+		});
+		yVal2 =parseInt(matches[2]);
+		dps2.push({
+			x: xVal,
+			y: yVal2
+		});
+		yVal3 =parseInt(matches[3]);
+		dps3.push({
+			x: xVal,
+			y: yVal3
+		});
+		xVal++;
+    if(matches[0]==1){
+      if((matches[3] >200 || matches[2] >200) && oflag==0){
+        oflag=1;
+         document.getElementById("otag").style.display = "block";
+         document.getElementById("ttag").style.display = "none";
+       }else if(matches[1] >200 && tflag==0){
+        tflag=1;
+         document.getElementById("ttag").style.display = "block";
+         document.getElementById("otag").style.display = "none";
+          
+       }else if(oflag==0 && tflag==0){
+          document.getElementById("otag").style.display = "none";
+          document.getElementById("ttag").style.display = "none";
+          counterFlag=1;
+       }
+       if(counterFlag){
+        counterFlag++;
+        if(counterFlag>100){
+            oflag=0;
+            tflag=0;
+        }
+       }
+       if(matches[4]==0){
+          document.getElementById("fstag").style.display = "block";
+          document.getElementById("fdtag").style.display = "none";
+       }else{
+          document.getElementById("fstag").style.display = "none";
+          document.getElementById("fdtag").style.display = "block";
+       }
+       if(matches[5]==0){
+          document.getElementById("gstag").style.display = "block";
+          document.getElementById("gdtag").style.display = "none";
+       }else{
+          document.getElementById("gstag").style.display = "none";
+          document.getElementById("gdtag").style.display = "block";
+       }
+       if(matches[6]==0){
+          document.getElementById("pstag").style.display = "block";
+          document.getElementById("pdtag").style.display = "none";
+       }else{
+          document.getElementById("pstag").style.display = "none";
+          document.getElementById("pdtag").style.display = "block";
+       }
+       if(matches[7]==0){
+          document.getElementById("mstag").style.display = "block";
+          document.getElementById("mdtag").style.display = "none";
+       }else{
+          document.getElementById("mstag").style.display = "none";
+          document.getElementById("mdtag").style.display = "block";
+       }
+       if(matches[8]==0){
+          document.getElementById("dstag").style.display = "block";
+          document.getElementById("ddtag").style.display = "none";
+       }else{
+          document.getElementById("dstag").style.display = "none";
+          document.getElementById("ddtag").style.display = "block";
+       }
+       if(matches[9]==0){
+          document.getElementById("sstag").style.display = "block";
+          document.getElementById("sdtag").style.display = "none";
+       }else{
+          document.getElementById("sstag").style.display = "none";
+          document.getElementById("sdtag").style.display = "block";
+       }
+    }
+	}
+
+	if (dps.length > dataLength) {
+		dps.shift();
+	}
+	if (dps2.length > dataLength) {
+		dps2.shift();
+	}
+	if (dps3.length > dataLength) {
+		dps3.shift();
+	}
+	chart.render();
+};
+
+updateChart(dataLength);
+setInterval(function(){updateChart()}, updateInterval);
+
+}
+</script>
+
+
+</head>
+<body role="document">
+  <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="#">Microcontrollers Project: Sensor Network.Your Personal Monitor.</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+  <div class="container theme-showcase" role="main">
+  <div class="page-header">
+    <div>      
+             </div>
+        <h1></h1>
+        <h1>Your Sensor Network</h1>
+      </div>
+      <div class="row">
+          <div class="panel panel-primary">
+            <div class="panel-heading">
+              <h3 class="panel-title">Fire Detection</h3>
+            </div>
+            <div class="panel-body">
+              <div class="alert alert-success" role="alert" id="fstag">
+        <strong>FIRE ALARM STATUS OK:</strong> Flame sensor is not detecting dangerous fire.
+      </div>
+      <div class="alert alert-danger" role="alert" id="fdtag">
+        <strong>DANGER:</strong> Flame sensor is detecting dangerous fire. Leave the installation to avoid accidents.
+      </div>
+            </div>
+          </div>
+          <div class="panel panel-primary">
+            <div class="panel-heading">
+              <h3 class="panel-title">LP Gas Detection</h3>
+            </div>
+            <div class="panel-body">
+              <div class="alert alert-success" role="alert" id="gstag">
+        <strong>GAS ALARM STATUS OK:</strong> Gas sensor is not detecting dangerous ammounts of LP Gas.
+      </div>
+      <div class="alert alert-danger" role="alert" id="gdtag">
+        <strong>DANGER:</strong> Gas sensor is detecting a leak of LP Gas. Please leave the installation and avoid fire ignition.
+      </div>
+            
+          </div>
+        </div>
+          <div class="panel panel-primary">
+            <div class="panel-heading">
+              <h3 class="panel-title">Movement Detection</h3>
+            </div>
+            <div class="panel-body">
+              <div class="alert alert-success" role="alert" id="mstag">
+               <strong>MOVEMENT SENSOR STATUS OK</strong> 
+              </div>
+      <div class="alert alert-danger" role="alert" id="mdtag">
+        <strong>HIGH DETECTION OF MOVEMENT</strong> 
+      </div>
+            </div>
+          
+         
+      </div>
+      <div class="panel panel-primary">
+            <div class="panel-heading">
+              <h3 class="panel-title">Panic Button Alarm</h3>
+            </div>
+            <div class="panel-body">
+              <div class="alert alert-success" role="alert" id="pstag">
+               <strong>PANIC BUTTON STATUS:</strong> Idle.
+              </div>
+      <div class="alert alert-danger" role="alert" id="pdtag">
+        <strong>PANIC BUTTON STATUS:</strong>Panic Button has been pressed due to an emergency.
+      </div>
+            </div>
+          
+         
+      </div>
+      <div class="panel panel-primary">
+            <div class="panel-heading">
+              <h3 class="panel-title">Door Alarm</h3>
+            </div>
+            <div class="panel-body">
+              <div class="alert alert-success" role="alert" id="dstag">
+               <strong>DOOR ALARM STATUS:</strong> Idle
+              </div>
+      <div class="alert alert-danger" role="alert" id="ddtag">
+        <strong>DOOR ALARM ACTIVATED</strong> 
+      </div>
+            </div>
+          
+         
+      </div>
+      <div class="panel panel-primary">
+            <div class="panel-heading">
+              <h3 class="panel-title">Security Alarm</h3>
+            </div>
+            <div class="panel-body">
+              <div class="alert alert-success" role="alert" id="sstag">
+               <strong>Security Alarm Status:</strong> OK
+              </div>
+      <div class="alert alert-danger" role="alert" id="sdtag">
+        <strong>SECURITY ALARM HAS DETECTED A HIGH AMMOUNT OF FAILED ATTEMPTS</strong> 
+      </div>
+            </div>
+          
+         
+      </div>
+  </div>
+
+  <div class="page-header">
+        <h1>Sismic Alert</h1>
+      </div>
+   <div class="well">
+        <div class="alert alert-danger" role="alert" id="otag">
+        <strong>DANGER:</strong> OSCILLATORY MOVEMENT DETECTED.
+      </div>
+      <div class="alert alert-danger" role="alert" id="ttag">
+        <strong>DANGER:</strong> TREPIDATORY MOVEMENT DETECTED.
+      </div>
+      </div>
+<div id="chartContainer" style="height: 370px; width:100%;"></div>
+<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+
+</div>
+</body>
+</html>
