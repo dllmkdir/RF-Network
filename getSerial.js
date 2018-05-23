@@ -1,13 +1,3 @@
-/*
-Simple Serial Server
-using servi.js and p5.js
-To call this type the following on the command line:
-node index.js portName
-where portname is the name of your serial port, e.g. /dev/tty.usbserial-xxxx (on OSX)
-created 19 Sept 2014
-modified 17 Mar 2015
-by Tom Igoe
-*/
 
 var serialport = require('serialport'),// include the library
 SerialPort = serialport.SerialPort,    // make a local instance of it
